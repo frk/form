@@ -194,7 +194,6 @@ func decodeValues(uv url.Values, sv reflect.Value, done map[string]bool, tagName
 				pv.Set(reflect.New(pv.Type().Elem()))
 			}
 			if tu, ok := pv.Interface().(encoding.TextUnmarshaler); ok {
-				fmt.Println("unamrsh:", tu)
 				for _, s := range vals {
 					if err := tu.UnmarshalText([]byte(s)); err != nil {
 						return err
