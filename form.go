@@ -2,6 +2,7 @@ package form
 
 import (
 	"bytes"
+	"encoding"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,7 +14,6 @@ import (
 /*
 TODO?
 
-- handle TextUnmarshalers
 - documentation
 - decoder tests
 - stream implementation of the Decoder a la the json.Decoder
@@ -171,20 +171,37 @@ func decodeValues(uv url.Values, sv reflect.Value, done map[string]bool, tagName
 
 		fv := sv.Field(i)
 		fk := fv.Kind()
-		if fk == reflect.Struct {
-			if sf.Anonymous {
-				// embedded struct values are handled outside of this loop
-				embedded = append(embedded, fv)
-			}
-			// nested structs are ignored
-			continue
-		}
 
 		vals := uv[key]
 		ln := len(vals)
 		if ln == 0 {
 			// if no value is associated with the key we continue with the next field
+			if fk == reflect.Struct && sf.Anonymous {
+				embedded = append(embedded, fv)
+			}
 			continue
+		}
+
+		var pv reflect.Value
+		if fk != reflect.Ptr && fv.Type().Name() != "" && fv.CanAddr() {
+			pv = fv.Addr()
+		} else if fk == reflect.Ptr {
+			pv = fv
+		}
+
+		if pv.IsValid() && pv.Type().NumMethod() > 0 {
+			if pv.IsNil() {
+				pv.Set(reflect.New(pv.Type().Elem()))
+			}
+			if tu, ok := pv.Interface().(encoding.TextUnmarshaler); ok {
+				fmt.Println("unamrsh:", tu)
+				for _, s := range vals {
+					if err := tu.UnmarshalText([]byte(s)); err != nil {
+						return err
+					}
+				}
+				continue
+			}
 		}
 
 		if fk == reflect.Slice {
