@@ -1,49 +1,140 @@
 package form
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/url"
 	"reflect"
 	"strconv"
 )
 
-// Transform takes the values of src and stores them into the value
-// pointed to by dst which must be a non-nil pointer to a struct.
-func Transform(src url.Values, dst interface{}) error {
-	rv := reflect.ValueOf(dst)
-	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return &InvalidArgumentError{reflect.TypeOf(dst), "Transform"}
+type Decoder struct {
+	r       io.Reader
+	tagName string
+}
+
+func NewDecoder(r io.Reader) *Decoder {
+	return &Decoder{r: r, tagName: DefaultTagName}
+}
+
+func (d *Decoder) Decode(v interface{}) error {
+	rv, ok := structValueOf(v)
+	if !ok {
+		return &InvalidArgumentError{reflect.TypeOf(v)}
 	}
 
+	data, err := ioutil.ReadAll(d.r)
+	if err != nil {
+		return err
+	}
+	m, err := parseData(data)
+	if err != nil {
+		return err
+	}
+
+	done := make(map[string]bool)
+	return decodeValues(url.Values(m), rv, done, d.tagName)
+}
+
+func (d *Decoder) UseTagName(tagName string) *Decoder {
+	d.tagName = tagName
+	return d
+}
+
+// Unmarshal
+func Unmarshal(data []byte, v interface{}) error {
+	rv, ok := structValueOf(v)
+	if !ok {
+		return &InvalidArgumentError{reflect.TypeOf(v)}
+	}
+
+	m, err := parseData(data)
+	if err != nil {
+		return err
+	}
+
+	done := make(map[string]bool)
+	return decodeValues(url.Values(m), rv, done, DefaultTagName)
+}
+
+func parseData(data []byte) (map[string][]string, error) {
+	m := make(map[string][]string)
+	for len(data) != 0 {
+		pair := data
+		if i := bytes.IndexAny(pair, "&;"); i >= 0 {
+			pair, data = pair[:i], pair[i+1:]
+		} else {
+			data = nil
+		}
+		if len(pair) == 0 {
+			continue
+		}
+
+		var key, value []byte
+		if i := bytes.IndexByte(pair, '='); i >= 0 {
+			key, value = pair[:i], pair[i+1:]
+		}
+
+		k, err := url.QueryUnescape(string(key))
+		if err != nil {
+			return nil, err
+		}
+		v, err := url.QueryUnescape(string(value))
+		if err != nil {
+			return nil, err
+		}
+
+		m[k] = append(m[k], v)
+	}
+	return m, nil
+}
+
+// Transform
+func Transform(vv url.Values, v interface{}) error {
+	rv, ok := structValueOf(v)
+	if !ok {
+		return &InvalidArgumentError{reflect.TypeOf(v)}
+	}
+
+	done := make(map[string]bool)
+	return decodeValues(vv, rv, done, DefaultTagName)
+}
+
+func structValueOf(v interface{}) (reflect.Value, bool) {
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		return rv, false
+	}
 	rv = rv.Elem()
 	if rv.Kind() == reflect.Interface {
 		rv = rv.Elem()
 	}
 	if rv.Kind() != reflect.Struct {
-		return &InvalidArgumentError{reflect.TypeOf(dst), "Transform"}
+		return rv, false
 	}
-
-	done := make(map[string]bool)
-	return decodeValues(src, rv, done)
+	return rv, true
 }
 
 type InvalidArgumentError struct {
-	Type     reflect.Type
-	FuncName string
+	Type reflect.Type
 }
 
 func (e *InvalidArgumentError) Error() string {
+	s := "form: the v interface{} argument must be a non-nil pointer to a struct, instead got "
 	if e.Type == nil {
-		return "form: " + e.FuncName + "(nil)"
+		s += "nil"
+	} else if e.Type.Kind() != reflect.Ptr {
+		s += "non-pointer " + e.Type.String()
+	} else {
+		s += e.Type.String()
 	}
 
-	if e.Type.Kind() != reflect.Ptr {
-		return "form: " + e.FuncName + "(non-pointer " + e.Type.String() + ")"
-	}
-	return "form: " + e.FuncName + "(nil " + e.Type.String() + ")"
+	return s
 }
 
-func decodeValues(uv url.Values, sv reflect.Value, done map[string]bool) error {
+func decodeValues(uv url.Values, sv reflect.Value, done map[string]bool, tagName string) error {
 	st := sv.Type()
 	n := sv.NumField()
 	embedded := []reflect.Value{}
@@ -53,7 +144,7 @@ func decodeValues(uv url.Values, sv reflect.Value, done map[string]bool) error {
 		if sf.PkgPath != "" && !sf.Anonymous {
 			continue
 		}
-		tag := sf.Tag.Get(DefaultTagName)
+		tag := sf.Tag.Get(tagName)
 		if tag == "-" {
 			continue
 		}
@@ -103,7 +194,7 @@ func decodeValues(uv url.Values, sv reflect.Value, done map[string]bool) error {
 
 	// embedded structs are handled last to ensure decoding into the first available field
 	for _, fv := range embedded {
-		if err := decodeValues(uv, fv, done); err != nil {
+		if err := decodeValues(uv, fv, done, tagName); err != nil {
 			return err
 		}
 	}

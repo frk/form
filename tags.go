@@ -10,11 +10,11 @@ import (
 
 const DefaultTagName = "form"
 
-// tagOptions is the string following a comma in a struct field's "json"
+// tagOptions is the string following a comma in a struct field's "form"
 // tag, or the empty string. It does not include the leading comma.
 type tagOptions string
 
-// parseTag splits a struct field's json tag into its name and
+// parseTag splits a struct field's form tag into its name and
 // comma-separated options.
 func parseTag(tag string) (string, tagOptions) {
 	if idx := strings.IndexByte(tag, ','); idx != -1 {
