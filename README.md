@@ -1,0 +1,1 @@
+encode/decode "application/x-www-form-urlencoded" type data into go structs
