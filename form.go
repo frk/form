@@ -135,16 +135,15 @@ type InvalidArgumentError struct {
 }
 
 func (e *InvalidArgumentError) Error() string {
-	s := "form: the v interface{} argument must be a non-nil pointer to a struct, instead got "
+	var t string
 	if e.Type == nil {
-		s += "nil"
+		t = "nil"
 	} else if e.Type.Kind() != reflect.Ptr {
-		s += "non-pointer " + e.Type.String()
+		t = "non-pointer " + e.Type.String()
 	} else {
-		s += e.Type.String()
+		t = e.Type.String()
 	}
-
-	return s
+	return "form: the v interface{} argument must be a non-nil pointer to a struct, instead got " + t
 }
 
 func decodeValues(uv url.Values, sv reflect.Value, done map[string]bool, tagName string) error {
