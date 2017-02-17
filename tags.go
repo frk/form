@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const DefaultTagName = "form"
+const DefaultTagKey = "form"
 
 // tagOptions is the string following a comma in a struct field's "form"
 // tag, or the empty string. It does not include the leading comma.

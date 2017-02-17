@@ -120,15 +120,15 @@ type uintParams struct {
 	Uint64ps []*uint64 `form:"uint64_ps"`
 }
 
-type embed_2 struct {
+type embed2 struct {
 	Name string `form:"name"`
 }
-type embed_1 struct {
-	embed_2
+type embed1 struct {
+	embed2
 	Name string `form:"name"`
 }
-type embed_0 struct {
-	embed_1
+type embed0 struct {
+	embed1
 	Name string `form:"-"`
 }
 
@@ -180,7 +180,7 @@ var testCases = []testCase{
 		name: "nil dst argument should err",
 		vals: url.Values{},
 		dst:  nil, want: nil,
-		err: &InvalidArgumentError{nil},
+		err: &ArgumentError{nil},
 	}, {
 		name: "string params should be set as is",
 		vals: url.Values{
@@ -340,7 +340,7 @@ var testCases = []testCase{
 	}, {
 		name: "should transform to an embeded field but only once",
 		vals: url.Values{"name": {"John Doe"}},
-		dst:  &embed_0{}, want: &embed_0{embed_1: embed_1{Name: "John Doe"}},
+		dst:  &embed0{}, want: &embed0{embed1: embed1{Name: "John Doe"}},
 		err: nil,
 	}, {
 		name: "should not transform to a nested struct",
@@ -350,15 +350,15 @@ var testCases = []testCase{
 	}, {
 		name: "nil dst should return error",
 		dst:  nil, want: nil,
-		err: &InvalidArgumentError{nil},
+		err: &ArgumentError{nil},
 	}, {
 		name: "non-pointer-struct dst should return error",
 		dst:  struct{}{}, want: struct{}{},
-		err: &InvalidArgumentError{reflect.TypeOf(struct{}{})},
+		err: &ArgumentError{reflect.TypeOf(struct{}{})},
 	}, {
 		name: "any dst that is not a pointer to a struct should return error",
 		dst:  []int{}, want: []int{},
-		err: &InvalidArgumentError{reflect.TypeOf([]int{})},
+		err: &ArgumentError{reflect.TypeOf([]int{})},
 	}, {
 		name: "bool type err",
 		vals: url.Values{"bool": {"Hello World"}},
@@ -451,35 +451,35 @@ func TestUnmarshal(t *testing.T) {
 	}
 }
 
-func TestParseData(t *testing.T) {
+func TestParseBytes(t *testing.T) {
 	tests := []struct {
-		data string
+		in   string
 		want map[string][]string
 		err  error
 	}{
 		{
-			data: "a=1&b=2",
+			in:   "a=1&b=2",
 			want: map[string][]string{"a": []string{"1"}, "b": []string{"2"}},
 		}, {
-			data: "a=1&a=2&a=banana",
+			in:   "a=1&a=2&a=banana",
 			want: map[string][]string{"a": []string{"1", "2", "banana"}},
 		}, {
-			data: "ascii=%3Ckey%3A+0x90%3E",
+			in:   "ascii=%3Ckey%3A+0x90%3E",
 			want: map[string][]string{"ascii": []string{"<key: 0x90>"}},
 		}, {
-			data: "a=1;b=2",
+			in:   "a=1;b=2",
 			want: map[string][]string{"a": []string{"1"}, "b": []string{"2"}},
 		}, {
-			data: "a=1&a=2;a=banana",
+			in:   "a=1&a=2;a=banana",
 			want: map[string][]string{"a": []string{"1", "2", "banana"}},
 		}, {
-			data: "a=100%",
+			in:   "a=100%",
 			want: nil, err: url.EscapeError("%"),
 		},
 	}
 
 	for i, tt := range tests {
-		got, err := parseData([]byte(tt.data))
+		got, err := parseBytes([]byte(tt.in))
 		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("#%d: got err %v, want %v", i, err, tt.err)
 		}
