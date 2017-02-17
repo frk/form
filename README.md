@@ -1,1 +1,1 @@
-The form package decodes "application/x-www-form-urlencoded" type data into go structs.
+The form package decodes `application/x-www-form-urlencoded` type data into go structs.
