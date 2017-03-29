@@ -1,14 +1,12 @@
 package form
 
-/*
-	The code in this file is pretty much a copy of Go's encoding/json tags code.
-*/
-
 import (
 	"strings"
 )
 
 const DefaultTagKey = "form"
+
+// NOTE(mkopriva): The code bellow is pretty much a copy of Go's encoding/json tags code.
 
 // tagOptions is the string following a comma in a struct field's "form"
 // tag, or the empty string. It does not include the leading comma.

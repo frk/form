@@ -175,13 +175,8 @@ type testCase struct {
 	err  error
 }
 
-var testCases = []testCase{
+var unmarshalTests = []testCase{
 	{
-		name: "nil dst argument should err",
-		vals: url.Values{},
-		dst:  nil, want: nil,
-		err: &ArgumentError{nil},
-	}, {
 		name: "string params should be set as is",
 		vals: url.Values{
 			"str": {"hello world"}, "str_p": {"bar"},
@@ -348,6 +343,11 @@ var testCases = []testCase{
 		dst:  &nest_0{}, want: &nest_0{},
 		err: nil,
 	}, {
+		name: "nil dst argument should err",
+		vals: url.Values{},
+		dst:  nil, want: nil,
+		err: &ArgumentError{nil},
+	}, {
 		name: "nil dst should return error",
 		dst:  nil, want: nil,
 		err: &ArgumentError{nil},
@@ -423,7 +423,7 @@ var testCases = []testCase{
 }
 
 func TestTransform(t *testing.T) {
-	for i, tt := range testCases {
+	for i, tt := range unmarshalTests {
 		t.Run(tt.name, func(t *testing.T) {
 			dst := pcopy(tt.dst)
 			if err := Transform(tt.vals, dst); !reflect.DeepEqual(err, tt.err) {
@@ -437,7 +437,7 @@ func TestTransform(t *testing.T) {
 }
 
 func TestUnmarshal(t *testing.T) {
-	for i, tt := range testCases {
+	for i, tt := range unmarshalTests {
 		t.Run(tt.name, func(t *testing.T) {
 			data := []byte(tt.vals.Encode())
 			dst := pcopy(tt.dst)
@@ -485,6 +485,34 @@ func TestParseBytes(t *testing.T) {
 		}
 		if !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("#%d: got %v, want %v", i, got, tt.want)
+		}
+	}
+}
+
+func TestMarshal(t *testing.T) {
+	tests := []struct {
+		tc testCase
+	}{{
+		tc: unmarshalTests[0],
+	}, {
+		tc: unmarshalTests[1],
+	}}
+
+	for i, tt := range tests {
+		out, err := Marshal(tt.tc.want)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+
+		got, err := url.ParseQuery(string(out))
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+
+		if !reflect.DeepEqual(got, tt.tc.vals) {
+			t.Errorf("#%d: got %v; want %v", i, got, tt.tc.vals)
 		}
 	}
 }

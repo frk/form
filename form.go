@@ -317,3 +317,120 @@ func parseBytes(data []byte) (map[string][]string, error) {
 	}
 	return m, nil
 }
+
+type Encoder struct {
+	tagKey string
+	out    string
+	w      io.Writer
+}
+
+func NewEncoder(w io.Writer) *Encoder {
+	return &Encoder{w: w, tagKey: DefaultTagKey}
+}
+
+func (e *Encoder) Encode(v interface{}) error {
+	rv := reflect.ValueOf(v)
+	for rv.Kind() == reflect.Ptr || rv.Kind() == reflect.Interface {
+		rv = rv.Elem()
+	}
+	if !rv.IsValid() {
+		return fmt.Errorf("invalid value")
+	}
+
+	rt := rv.Type()
+	if rv.Kind() == reflect.Struct {
+		if err := e.encodeStruct(rv, rt); err != nil {
+			return err
+		}
+	}
+
+	if _, err := e.w.Write([]byte(e.out)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *Encoder) encodeStruct(rv reflect.Value, rt reflect.Type) error {
+	num := rt.NumField()
+
+	for i := 0; i < num; i++ {
+		fv := rv.Field(i)
+		sf := rt.Field(i)
+
+		if sf.PkgPath != "" && !sf.Anonymous {
+			continue // skip unexported
+		}
+
+		tag := sf.Tag.Get(e.tagKey)
+		key, opts := parseTag(tag)
+		if key == "-" || (opts.Contains("omitempty") && isEmptyValue(fv)) {
+			continue
+		}
+
+		if fv.Kind() == reflect.Slice {
+			ln := fv.Len()
+			for j := 0; j < ln; j++ {
+				val := encodeString(fv.Index(j))
+				if len(e.out) > 0 {
+					e.out += "&"
+				}
+				e.out += url.QueryEscape(key) + "=" + url.QueryEscape(val)
+			}
+			continue
+		}
+
+		val := encodeString(fv)
+		if len(e.out) > 0 {
+			e.out += "&"
+		}
+		e.out += url.QueryEscape(key) + "=" + url.QueryEscape(val)
+	}
+
+	return nil
+}
+
+func Marshal(v interface{}) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := NewEncoder(&buf).Encode(v); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func encodeString(rv reflect.Value) string {
+	for rv.Kind() == reflect.Ptr || rv.Kind() == reflect.Interface {
+		rv = rv.Elem()
+	}
+
+	switch k := rv.Kind(); k {
+	case reflect.String:
+		return rv.String()
+	case reflect.Bool:
+		return strconv.FormatBool(rv.Bool())
+	case reflect.Float32, reflect.Float64:
+		return strconv.FormatFloat(rv.Float(), 'f', -1, 64)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return strconv.FormatInt(rv.Int(), 10)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return strconv.FormatUint(rv.Uint(), 10)
+	}
+	return ""
+}
+
+func isEmptyValue(rv reflect.Value) bool {
+	switch rv.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return rv.Len() == 0
+	case reflect.Bool:
+		return !rv.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return rv.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return rv.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return rv.Float() == 0
+	case reflect.Interface, reflect.Ptr:
+		return rv.IsNil()
+	}
+	return false
+}
