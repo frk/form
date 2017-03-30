@@ -120,20 +120,20 @@ type uintParams struct {
 	Uint64ps []*uint64 `form:"uint64_ps"`
 }
 
-type embed2 struct {
-	Name string `form:"name"`
+type embed0 struct {
+	embed1
+	Name string `form:"-"`
 }
 type embed1 struct {
 	embed2
 	Name string `form:"name"`
 }
-type embed0 struct {
-	embed1
-	Name string `form:"-"`
+type embed2 struct {
+	Name string `form:"name"`
 }
 
-type nest_0 struct {
-	nest_1 struct {
+type nest0 struct {
+	nest1 struct {
 		Name string `form:"name"`
 	}
 }
@@ -340,7 +340,7 @@ var unmarshalTests = []testCase{
 	}, {
 		name: "should not transform to a nested struct",
 		vals: url.Values{"name": {"John Doe"}},
-		dst:  &nest_0{}, want: &nest_0{},
+		dst:  &nest0{}, want: &nest0{},
 		err: nil,
 	}, {
 		name: "nil dst argument should err",
@@ -489,30 +489,280 @@ func TestParseBytes(t *testing.T) {
 	}
 }
 
+type boolType struct {
+	Bool   bool
+	Boolp  *bool
+	Bools  []bool
+	Boolps []*bool
+}
+
+var boolVal = boolType{
+	Bool:   false,
+	Boolp:  boolp(true),
+	Bools:  []bool{true, false, false},
+	Boolps: []*bool{boolp(true), boolp(true)},
+}
+
+var boolValString = `Bool=false&Boolp=true&Bools=true&Bools=false&Bools=false&Boolps=true&Boolps=true`
+
+type intType struct {
+	Int   int
+	Int8  int8
+	Int16 int16
+	Int32 int32
+	Int64 int64
+}
+
+var intVal = intType{
+	Int:   1,
+	Int8:  2,
+	Int16: 3,
+	Int32: 4,
+	Int64: 5,
+}
+
+var intValString = `Int=1&Int8=2&Int16=3&Int32=4&Int64=5`
+
+type intpType struct {
+	Intp   *int
+	Int8p  *int8
+	Int16p *int16
+	Int32p *int32
+	Int64p *int64
+}
+
+var intpVal = intpType{
+	Intp:   intp(6),
+	Int8p:  i8p(7),
+	Int16p: i16p(8),
+	Int32p: i32p(9),
+	Int64p: i64p(10),
+}
+
+var intpValString = `Intp=6&Int8p=7&Int16p=8&Int32p=9&Int64p=10`
+
+type intsType struct {
+	Ints   []int
+	Int8s  []int8
+	Int16s []int16
+	Int32s []int32
+	Int64s []int64
+}
+
+var intsVal = intsType{
+	Ints:   []int{11},
+	Int8s:  []int8{12, 13},
+	Int16s: []int16{14},
+	Int32s: []int32{15},
+	Int64s: []int64{16, 17},
+}
+
+var intsValString = `Ints=11&Int8s=12&Int8s=13&Int16s=14&Int32s=15&Int64s=16&Int64s=17`
+
+type intpsType struct {
+	Intps   []*int
+	Int8ps  []*int8
+	Int16ps []*int16
+	Int32ps []*int32
+	Int64ps []*int64
+}
+
+var intpsVal = intpsType{
+	Intps:   []*int{intp(18), intp(19)},
+	Int8ps:  []*int8{i8p(20)},
+	Int16ps: []*int16{i16p(21), i16p(22)},
+	Int32ps: []*int32{i32p(23), i32p(24)},
+	Int64ps: []*int64{i64p(25)},
+}
+
+var intpsValString = `Intps=18&Intps=19&Int8ps=20&Int16ps=21&Int16ps=22&Int32ps=23&Int32ps=24&Int64ps=25`
+
+type uintType struct {
+	Uint   uint
+	Uint8  uint8
+	Uint16 uint16
+	Uint32 uint32
+	Uint64 uint64
+}
+
+var uintVal = uintType{
+	Uint:   26,
+	Uint8:  27,
+	Uint16: 28,
+	Uint32: 29,
+	Uint64: 30,
+}
+
+var uintValString = `Uint=26&Uint8=27&Uint16=28&Uint32=29&Uint64=30`
+
+type uintpType struct {
+	Uintp   *uint
+	Uint8p  *uint8
+	Uint16p *uint16
+	Uint32p *uint32
+	Uint64p *uint64
+}
+
+var uintpVal = uintpType{
+	Uintp:   uintp(31),
+	Uint8p:  u8p(32),
+	Uint16p: u16p(33),
+	Uint32p: u32p(34),
+	Uint64p: u64p(35),
+}
+
+var uintpValString = `Uintp=31&Uint8p=32&Uint16p=33&Uint32p=34&Uint64p=35`
+
+type uintsType struct {
+	Uints   []uint
+	Uint8s  []uint8
+	Uint16s []uint16
+	Uint32s []uint32
+	Uint64s []uint64
+}
+
+var uintsVal = uintsType{
+	Uints:   []uint{36},
+	Uint8s:  []uint8{37, 38},
+	Uint16s: []uint16{39},
+	Uint32s: []uint32{40},
+	Uint64s: []uint64{41, 42},
+}
+
+var uintsValString = `Uints=36&Uint8s=37&Uint8s=38&Uint16s=39&Uint32s=40&Uint64s=41&Uint64s=42`
+
+type uintpsType struct {
+	Uintps   []*uint
+	Uint8ps  []*uint8
+	Uint16ps []*uint16
+	Uint32ps []*uint32
+	Uint64ps []*uint64
+}
+
+var uintpsVal = uintpsType{
+	Uintps:   []*uint{uintp(43), uintp(44)},
+	Uint8ps:  []*uint8{u8p(45)},
+	Uint16ps: []*uint16{u16p(46), u16p(47)},
+	Uint32ps: []*uint32{u32p(48), u32p(49)},
+	Uint64ps: []*uint64{u64p(50)},
+}
+
+var uintpsValString = `Uintps=43&Uintps=44&Uint8ps=45&Uint16ps=46&Uint16ps=47&Uint32ps=48&Uint32ps=49&Uint64ps=50`
+
+type stringType struct {
+	String   string
+	Stringp  *string
+	Strings  []string
+	Stringps []*string
+}
+
+var stringVal = stringType{
+	String:   "51",
+	Stringp:  strp("foo"),
+	Strings:  []string{"foo", "bar", "baz"},
+	Stringps: []*string{strp("baz"), strp("bar"), strp("foo")},
+}
+
+var stringValString = `String=51&Stringp=foo&Strings=foo&Strings=bar&Strings=baz&Stringps=baz&Stringps=bar&Stringps=foo`
+
+type floatType struct {
+	Float32  float32
+	Float32p *float32
+	Float64  float64
+	Float64p *float64
+}
+
+var floatVal = floatType{
+	Float32:  52.00001,
+	Float32p: f32p(52.1234),
+	Float64:  52.64,
+	Float64p: f64p(52.0),
+}
+
+var floatValString = `Float32=52.00001&Float32p=52.1234&Float64=52.64&Float64p=52`
+
+type floatsType struct {
+	Float32s  []float32
+	Float32ps []*float32
+	Float64s  []float64
+	Float64ps []*float64
+}
+
+var floatsVal = floatsType{
+	Float32s:  []float32{53.01},
+	Float32ps: []*float32{f32p(53.1), f32p(53.2)},
+	Float64s:  []float64{53.03, 53.04},
+	Float64ps: []*float64{f64p(53.0005), f64p(53.6)},
+}
+
+var floatsValString = `Float32s=53.01&Float32ps=53.1&Float32ps=53.2&Float64s=53.03&Float64s=53.04&Float64ps=53.0005&Float64ps=53.6`
+
 func TestMarshal(t *testing.T) {
 	tests := []struct {
-		tc testCase
+		name string
+		val  interface{}
+		want string
 	}{{
-		tc: unmarshalTests[0],
+		name: "bool values",
+		val:  boolVal,
+		want: boolValString,
 	}, {
-		tc: unmarshalTests[1],
+		name: "int values",
+		val:  intVal,
+		want: intValString,
+	}, {
+		name: "int pointer values",
+		val:  intpVal,
+		want: intpValString,
+	}, {
+		name: "int slices",
+		val:  intsVal,
+		want: intsValString,
+	}, {
+		name: "int pointer slices",
+		val:  intpsVal,
+		want: intpsValString,
+	}, {
+		name: "uint values",
+		val:  uintVal,
+		want: uintValString,
+	}, {
+		name: "uint pointer values",
+		val:  uintpVal,
+		want: uintpValString,
+	}, {
+		name: "uint slices",
+		val:  uintsVal,
+		want: uintsValString,
+	}, {
+		name: "uint pointer slices",
+		val:  uintpsVal,
+		want: uintpsValString,
+	}, {
+		name: "string values",
+		val:  stringVal,
+		want: stringValString,
+	}, {
+		name: "float values",
+		val:  floatVal,
+		want: floatValString,
+	}, {
+		name: "float slices",
+		val:  floatsVal,
+		want: floatsValString,
 	}}
 
 	for i, tt := range tests {
-		out, err := Marshal(tt.tc.want)
-		if err != nil {
-			t.Error(err)
-			continue
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			bgot, err := Marshal(tt.val)
+			if err != nil {
+				t.Error(err)
+				return
+			}
 
-		got, err := url.ParseQuery(string(out))
-		if err != nil {
-			t.Error(err)
-			continue
-		}
-
-		if !reflect.DeepEqual(got, tt.tc.vals) {
-			t.Errorf("#%d: got %v; want %v", i, got, tt.tc.vals)
-		}
+			if got := string(bgot); got != tt.want {
+				t.Errorf("#%d: got %q, want %q", i, got, tt.want)
+			}
+		})
 	}
 }

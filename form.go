@@ -318,6 +318,14 @@ func parseBytes(data []byte) (map[string][]string, error) {
 	return m, nil
 }
 
+func Marshal(v interface{}) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := NewEncoder(&buf).Encode(v); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
 type Encoder struct {
 	tagKey string
 	out    string
@@ -358,13 +366,16 @@ func (e *Encoder) encodeStruct(rv reflect.Value, rt reflect.Type) error {
 		sf := rt.Field(i)
 
 		if sf.PkgPath != "" && !sf.Anonymous {
-			continue // skip unexported
+			continue // skip unexported fields
 		}
 
 		tag := sf.Tag.Get(e.tagKey)
 		key, opts := parseTag(tag)
 		if key == "-" || (opts.Contains("omitempty") && isEmptyValue(fv)) {
 			continue
+		}
+		if len(key) == 0 {
+			key = sf.Name
 		}
 
 		if fv.Kind() == reflect.Slice {
@@ -389,14 +400,6 @@ func (e *Encoder) encodeStruct(rv reflect.Value, rt reflect.Type) error {
 	return nil
 }
 
-func Marshal(v interface{}) ([]byte, error) {
-	var buf bytes.Buffer
-	if err := NewEncoder(&buf).Encode(v); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
 func encodeString(rv reflect.Value) string {
 	for rv.Kind() == reflect.Ptr || rv.Kind() == reflect.Interface {
 		rv = rv.Elem()
@@ -408,7 +411,7 @@ func encodeString(rv reflect.Value) string {
 	case reflect.Bool:
 		return strconv.FormatBool(rv.Bool())
 	case reflect.Float32, reflect.Float64:
-		return strconv.FormatFloat(rv.Float(), 'f', -1, 64)
+		return strconv.FormatFloat(rv.Float(), 'f', -1, int(rv.Type().Size())*8)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return strconv.FormatInt(rv.Int(), 10)
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
