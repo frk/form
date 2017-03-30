@@ -505,6 +505,16 @@ var boolVal = boolType{
 
 var boolValString = `Bool=false&Boolp=true&Bools=true&Bools=false&Bools=false&Boolps=true&Boolps=true`
 
+func TestUnmarshal2(t *testing.T) {
+	var val boolType
+	if err := Unmarshal([]byte(boolValString), &val); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(boolVal, val) {
+		t.Errorf("got %v want %v", val, boolVal)
+	}
+}
+
 type intType struct {
 	Int   int
 	Int8  int8
@@ -697,59 +707,149 @@ var floatsVal = floatsType{
 
 var floatsValString = `Float32s=53.01&Float32ps=53.1&Float32ps=53.2&Float64s=53.03&Float64s=53.04&Float64ps=53.0005&Float64ps=53.6`
 
+type _embed0 struct {
+	_embed1
+	Field string
+}
+
+type _embed1 struct {
+	_embed2
+	Field int
+}
+
+type _embed2 struct {
+	Field float64
+}
+
+var embedVal = _embed0{
+	_embed1: _embed1{
+		_embed2: _embed2{34.67},
+		Field:   3467,
+	},
+	Field: "string",
+}
+
+var embedValString = `Field=34.67&Field=3467&Field=string`
+
+type marshalSlice []string
+
+func (s *marshalSlice) MarshalText() ([]byte, error) {
+	return []byte(strings.Join(*s, ",")), nil
+}
+
+type marshalType struct {
+	M *marshalSlice
+	N marshalSlice
+}
+
+var marshalVal = marshalType{
+	M: &marshalSlice{"foo", "bar", "baz"},
+	N: marshalSlice{"foo", "bar", "baz"},
+}
+
+var marshalValString = `M=foo%2Cbar%2Cbaz&N=foo&N=bar&N=baz`
+
+func ifacep(i interface{}) *interface{} { return &i }
+
+type ifaceType struct {
+	IString interface{}
+	IInt    interface{}
+	IBool   *interface{}
+	ISlice  interface{}
+}
+
+var ifaceVal = ifaceType{
+	IString: "foo",
+	IInt:    intp(32),
+	IBool:   ifacep(true),
+	ISlice:  []interface{}{"abc", float32(32.1234567)},
+}
+
+var ifaceValString = `IString=foo&IInt=32&IBool=true&ISlice=abc&ISlice=32.123455`
+
+// TODO test tags
+
 func TestMarshal(t *testing.T) {
 	tests := []struct {
 		name string
 		val  interface{}
-		want string
+		str  string
+		dst  interface{}
 	}{{
 		name: "bool values",
 		val:  boolVal,
-		want: boolValString,
+		str:  boolValString,
+		dst:  boolType{},
 	}, {
 		name: "int values",
 		val:  intVal,
-		want: intValString,
+		str:  intValString,
+		dst:  intType{},
 	}, {
 		name: "int pointer values",
 		val:  intpVal,
-		want: intpValString,
+		str:  intpValString,
+		dst:  intpType{},
 	}, {
 		name: "int slices",
 		val:  intsVal,
-		want: intsValString,
+		str:  intsValString,
+		dst:  intsType{},
 	}, {
 		name: "int pointer slices",
 		val:  intpsVal,
-		want: intpsValString,
+		str:  intpsValString,
+		dst:  intpsType{},
 	}, {
 		name: "uint values",
 		val:  uintVal,
-		want: uintValString,
+		str:  uintValString,
+		dst:  uintType{},
 	}, {
 		name: "uint pointer values",
 		val:  uintpVal,
-		want: uintpValString,
+		str:  uintpValString,
+		dst:  uintpType{},
 	}, {
 		name: "uint slices",
 		val:  uintsVal,
-		want: uintsValString,
+		str:  uintsValString,
+		dst:  uintsType{},
 	}, {
 		name: "uint pointer slices",
 		val:  uintpsVal,
-		want: uintpsValString,
+		str:  uintpsValString,
+		dst:  uintpsType{},
 	}, {
 		name: "string values",
 		val:  stringVal,
-		want: stringValString,
+		str:  stringValString,
+		dst:  stringType{},
 	}, {
 		name: "float values",
 		val:  floatVal,
-		want: floatValString,
+		str:  floatValString,
+		dst:  floatType{},
 	}, {
 		name: "float slices",
 		val:  floatsVal,
-		want: floatsValString,
+		str:  floatsValString,
+		dst:  floatsType{},
+	}, {
+		name: "embeded types",
+		val:  embedVal,
+		str:  embedValString,
+		dst:  _embed0{},
+	}, {
+		name: "TextMarshaler type",
+		val:  marshalVal,
+		str:  marshalValString,
+		dst:  marshalType{},
+	}, {
+		name: "interface values",
+		val:  ifaceVal,
+		str:  ifaceValString,
+		dst:  ifaceType{},
 	}}
 
 	for i, tt := range tests {
@@ -760,8 +860,8 @@ func TestMarshal(t *testing.T) {
 				return
 			}
 
-			if got := string(bgot); got != tt.want {
-				t.Errorf("#%d: got %q, want %q", i, got, tt.want)
+			if got := string(bgot); got != tt.str {
+				t.Errorf("#%d: got %q, want %q", i, got, tt.str)
 			}
 		})
 	}

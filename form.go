@@ -358,6 +358,8 @@ func (e *Encoder) Encode(v interface{}) error {
 	return nil
 }
 
+var textMarshalerType = reflect.TypeOf(new(encoding.TextMarshaler)).Elem()
+
 func (e *Encoder) encodeStruct(rv reflect.Value, rt reflect.Type) error {
 	num := rt.NumField()
 
@@ -365,19 +367,65 @@ func (e *Encoder) encodeStruct(rv reflect.Value, rt reflect.Type) error {
 		fv := rv.Field(i)
 		sf := rt.Field(i)
 
+		// skip unexported fields
 		if sf.PkgPath != "" && !sf.Anonymous {
-			continue // skip unexported fields
+			continue
 		}
 
+		// get field info
 		tag := sf.Tag.Get(e.tagKey)
 		key, opts := parseTag(tag)
-		if key == "-" || (opts.Contains("omitempty") && isEmptyValue(fv)) {
+		if !fv.IsValid() || key == "-" || (opts.Contains("omitempty") && isEmptyValue(fv)) {
 			continue
 		}
 		if len(key) == 0 {
 			key = sf.Name
 		}
 
+		// implements encoding.TextMarshaler flag
+		var isTM bool
+		if fv.Type().Implements(textMarshalerType) {
+			isTM = true
+		}
+
+		// get the base elem value
+		for !isTM && (fv.Kind() == reflect.Ptr || fv.Kind() == reflect.Interface) {
+			fv = fv.Elem()
+			if fv.IsValid() && fv.Type().Implements(textMarshalerType) {
+				isTM = true
+			}
+		}
+		if !fv.IsValid() {
+			continue
+		}
+
+		// handle marshaler
+		if isTM {
+			var val string
+			tm, ok := fv.Interface().(encoding.TextMarshaler)
+			if ok {
+				b, err := tm.MarshalText()
+				if err != nil {
+					return err
+				}
+				val = string(b)
+			}
+			if len(e.out) > 0 {
+				e.out += "&"
+			}
+			e.out += url.QueryEscape(key) + "=" + url.QueryEscape(val)
+			continue
+		}
+
+		// encode embedded struct types
+		if fv.Kind() == reflect.Struct && sf.Anonymous {
+			if err := e.encodeStruct(fv, fv.Type()); err != nil {
+				return err
+			}
+			continue
+		}
+
+		// encode slice values
 		if fv.Kind() == reflect.Slice {
 			ln := fv.Len()
 			for j := 0; j < ln; j++ {
