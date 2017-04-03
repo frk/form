@@ -12,11 +12,7 @@ import (
 	"strconv"
 )
 
-/*
-TODO:
-- encoder
-- support for "multipart/form-data"
-*/
+// TODO: support for "multipart/form-data"
 
 // The ArgumentError will be returned by one of the package's expored functions
 // or methods if the argument passed to them is not a non-nil pointer to a struct.
@@ -191,7 +187,7 @@ func (d *Decoder) decode(dst reflect.Value) error {
 		// If the field is a slice, allocate a new slice with length
 		// equal to the number of elements in values, loop over the
 		// values and decode each one into its respective position.
-		if fk == reflect.Slice {
+		if fv.Kind() == reflect.Slice {
 			sl := reflect.MakeSlice(fv.Type(), ln, ln)
 			for j := 0; j < ln; j++ {
 				if err := decodeString(sl.Index(j), d.vals[j]); err != nil {
