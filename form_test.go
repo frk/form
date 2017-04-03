@@ -680,21 +680,6 @@ func TestUnmarshal_errors(t *testing.T) {
 	}
 }
 
-//func TestTransform(t *testing.T) {
-//	for i, tt := range unmarshalTests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			dst := pcopy(tt.dst)
-//			if err := Transform(tt.vals, dst); !reflect.DeepEqual(err, tt.err) {
-//				t.Errorf("#%d: got %#v, want %#v", i, err, tt.err)
-//			}
-//			if !reflect.DeepEqual(tt.want, dst) {
-//				t.Errorf("#%d: got %+v, want %+v", i, dst, tt.want)
-//			}
-//		})
-//	}
-//}
-//
-
 func TestParseBytes(t *testing.T) {
 	tests := []struct {
 		in   string
