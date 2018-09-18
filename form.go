@@ -338,7 +338,7 @@ func (e *Encoder) Encode(v interface{}) error {
 		rv = rv.Elem()
 	}
 	if !rv.IsValid() {
-		return fmt.Errorf("invalid value")
+		return nil
 	}
 
 	rt := rv.Type()
