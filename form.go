@@ -72,10 +72,11 @@ func Transform(src url.Values, dst interface{}) error {
 
 // A Decoder reads and decodes URL-encoded values.
 type Decoder struct {
-	src    map[string][]string
-	done   map[string]bool
-	tagKey string
-	err    error
+	tagKey string // TODO export
+
+	src  map[string][]string
+	done map[string]bool
+	err  error
 
 	vals []string
 	key  string
@@ -142,6 +143,7 @@ func (d *Decoder) decode(dst reflect.Value) error {
 		// If a field with this key was already decoded,
 		// continue to the next one.
 		if d.done[key] {
+			//fmt.Println("abc", field.Name)
 			continue
 		}
 
@@ -156,6 +158,7 @@ func (d *Decoder) decode(dst reflect.Value) error {
 			// If the field is a struct and it is embedded, "record"
 			// it and decode its fields after the main loop's done.
 			if fk == reflect.Struct && field.Anonymous {
+				fmt.Println("abc", field.Name)
 				embedded = append(embedded, fv)
 			}
 

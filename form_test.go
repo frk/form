@@ -249,13 +249,13 @@ var floatsValString = `Float32s=53.01&Float32ps=53.1&Float32ps=53.2&Float64s=53.
 var floatsValues = url.Values{"Float32s": {"53.01"}, "Float32ps": {"53.1", "53.2"}, "Float64s": {"53.03", "53.04"}, "Float64ps": {"53.0005", "53.6"}}
 
 type embed0 struct {
-	embed1
 	Field string
+	embed1
 }
 
 type embed1 struct {
-	embed2
 	Field int
+	embed2
 }
 
 type embed2 struct {
@@ -270,8 +270,8 @@ var embedVal = embed0{
 	Field: "string",
 }
 
-var embedValString = `Field=34.67&Field=3467&Field=string`
-var embedValues = url.Values{"Field": {"34.67", "3467", "string"}}
+var embedValString = `Field=string&Field=3467&Field=34.67`
+var embedValues = url.Values{"Field": {"string", "3467", "34.67"}}
 
 type marshalSlice []string
 
@@ -374,7 +374,7 @@ func TestMarshal(t *testing.T) {
 		val:  floatsVal,
 		str:  floatsValString,
 	}, {
-		name: "embeded types",
+		name: "embedded types",
 		val:  embedVal,
 		str:  embedValString,
 	}, {
@@ -470,16 +470,16 @@ func TestUnmarshal(t *testing.T) {
 		data: marshalValString,
 		dst:  &marshalType{},
 		want: &marshalVal,
-		//}, {
-		//	name: "embeded types",
-		//	data: embedValString,
-		//	dst:  &embed0{},
-		//	want: &embedVal,
-		//}, {
-		//	name: "interface values",
-		//	data: ifaceValString,
-		//	dst:  &ifaceType{},
-		//	want: &ifaceVal,
+	}, {
+		name: "embeded types",
+		data: embedValString,
+		dst:  &embed0{},
+		want: &embedVal,
+	}, {
+		name: "interface values",
+		data: ifaceValString,
+		dst:  &ifaceType{},
+		want: &ifaceVal,
 	}}
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -564,16 +564,16 @@ func TestTransform(t *testing.T) {
 		vals: marshalValues,
 		dst:  &marshalType{},
 		want: &marshalVal,
-		//}, {
-		//	name: "embeded types",
-		//	vals: embedValues,
-		//	dst:  &embed0{},
-		//	want: &embedVal,
-		//}, {
-		//	name: "interface values",
-		//	vals: ifaceValues,
-		//	dst:  &ifaceType{},
-		//	want: &ifaceVal,
+	}, {
+		name: "embeded types",
+		vals: embedValues,
+		dst:  &embed0{},
+		want: &embedVal,
+	}, {
+		name: "interface values",
+		vals: ifaceValues,
+		dst:  &ifaceType{},
+		want: &ifaceVal,
 	}}
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
