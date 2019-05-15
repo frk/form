@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"mime"
+	"mime/multipart"
+	"net/http"
 	"net/url"
 	"reflect"
 	"strconv"
@@ -70,6 +73,10 @@ func Transform(src url.Values, dst interface{}) error {
 	return d.Decode(dst)
 }
 
+const (
+	defaultMaxMemory = 32 << 20 // 32 MB
+)
+
 // A Decoder reads and decodes URL-encoded values.
 type Decoder struct {
 	tagKey string // TODO export
@@ -94,6 +101,30 @@ func NewDecoder(r io.Reader) *Decoder {
 		return &Decoder{err: err}
 	}
 
+	return &Decoder{src: src, done: make(map[string]bool)}
+}
+
+// NewDecoderMultipart returns a new decoder that reads from r.
+func NewDecoderMultipart(r io.Reader, contentType string) *Decoder {
+	d, params, err := mime.ParseMediaType(contentType)
+	if err != nil || d != "multipart/form-data" {
+		return &Decoder{err: http.ErrNotMultipart}
+	}
+	boundary, ok := params["boundary"]
+	if !ok {
+		return &Decoder{err: http.ErrMissingBoundary}
+	}
+	mr := multipart.NewReader(r, boundary)
+
+	f, err := mr.ReadForm(defaultMaxMemory)
+	if err != nil {
+		return &Decoder{err: err}
+	}
+
+	src := make(map[string][]string)
+	for k, v := range f.Value {
+		src[k] = append(src[k], v...)
+	}
 	return &Decoder{src: src, done: make(map[string]bool)}
 }
 

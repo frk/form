@@ -7,6 +7,9 @@ import (
 	"testing"
 )
 
+//
+// multipart/form-data; boundary="foobar"
+//
 // TODO test tags
 
 func boolp(b bool) *bool { return &b }
@@ -25,8 +28,18 @@ var boolVal = boolType{
 	Boolps: []*bool{boolp(true), boolp(true)},
 }
 
-var boolValString = `Bool=false&Boolp=true&Bools=true&Bools=false&Bools=false&Boolps=true&Boolps=true`
 var boolValues = url.Values{"Bool": {"false"}, "Boolp": {"true"}, "Bools": {"true", "false", "false"}, "Boolps": {"true", "true"}}
+
+const boolValString = `Bool=false&Boolp=true&Bools=true&Bools=false&Bools=false&Boolps=true&Boolps=true`
+const boolValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="Bool"` + "\n\n" + `false
+--foobar` + "\n" + `Content-Disposition: form-data; name="Boolp"` + "\n\n" + `true
+--foobar` + "\n" + `Content-Disposition: form-data; name="Bools"` + "\n\n" + `true
+--foobar` + "\n" + `Content-Disposition: form-data; name="Bools"` + "\n\n" + `false
+--foobar` + "\n" + `Content-Disposition: form-data; name="Boolps"` + "\n\n" + `true
+--foobar` + "\n" + `Content-Disposition: form-data; name="Boolps"` + "\n\n" + `true
+--foobar--
+`
 
 type intType struct {
 	Int   int
@@ -44,8 +57,17 @@ var intVal = intType{
 	Int64: 5,
 }
 
-var intValString = `Int=1&Int8=2&Int16=3&Int32=4&Int64=5`
 var intValues = url.Values{"Int": {"1"}, "Int8": {"2"}, "Int16": {"3"}, "Int32": {"4"}, "Int64": {"5"}}
+
+const intValString = `Int=1&Int8=2&Int16=3&Int32=4&Int64=5`
+const intValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="Int"` + "\n\n" + `1
+--foobar` + "\n" + `Content-Disposition: form-data; name="Int8"` + "\n\n" + `2
+--foobar` + "\n" + `Content-Disposition: form-data; name="Int16"` + "\n\n" + `3
+--foobar` + "\n" + `Content-Disposition: form-data; name="Int32"` + "\n\n" + `4
+--foobar` + "\n" + `Content-Disposition: form-data; name="Int64"` + "\n\n" + `5
+--foobar--
+`
 
 func i16p(i int16) *int16 { return &i }
 func i32p(i int32) *int32 { return &i }
@@ -69,8 +91,17 @@ var intpVal = intpType{
 	Int64p: i64p(10),
 }
 
-var intpValString = `Intp=6&Int8p=7&Int16p=8&Int32p=9&Int64p=10`
 var intpValues = url.Values{"Intp": {"6"}, "Int8p": {"7"}, "Int16p": {"8"}, "Int32p": {"9"}, "Int64p": {"10"}}
+
+const intpValString = `Intp=6&Int8p=7&Int16p=8&Int32p=9&Int64p=10`
+const intpValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="Intp"` + "\n\n" + `6
+--foobar` + "\n" + `Content-Disposition: form-data; name="Intp8"` + "\n\n" + `7
+--foobar` + "\n" + `Content-Disposition: form-data; name="Intp16"` + "\n\n" + `8
+--foobar` + "\n" + `Content-Disposition: form-data; name="Intp32"` + "\n\n" + `9
+--foobar` + "\n" + `Content-Disposition: form-data; name="Intp64"` + "\n\n" + `10
+--foobar--
+`
 
 type intsType struct {
 	Ints   []int
@@ -88,8 +119,19 @@ var intsVal = intsType{
 	Int64s: []int64{16, 17},
 }
 
-var intsValString = `Ints=11&Int8s=12&Int8s=13&Int16s=14&Int32s=15&Int64s=16&Int64s=17`
 var intsValues = url.Values{"Ints": {"11"}, "Int8s": {"12", "13"}, "Int16s": {"14"}, "Int32s": {"15"}, "Int64s": {"16", "17"}}
+
+const intsValString = `Ints=11&Int8s=12&Int8s=13&Int16s=14&Int32s=15&Int64s=16&Int64s=17`
+const intsValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="Ints"` + "\n\n" + `11
+--foobar` + "\n" + `Content-Disposition: form-data; name="Ints8"` + "\n\n" + `12
+--foobar` + "\n" + `Content-Disposition: form-data; name="Ints8"` + "\n\n" + `13
+--foobar` + "\n" + `Content-Disposition: form-data; name="Ints16"` + "\n\n" + `14
+--foobar` + "\n" + `Content-Disposition: form-data; name="Ints32"` + "\n\n" + `15
+--foobar` + "\n" + `Content-Disposition: form-data; name="Ints64"` + "\n\n" + `16
+--foobar` + "\n" + `Content-Disposition: form-data; name="Ints64"` + "\n\n" + `17
+--foobar--
+`
 
 type intpsType struct {
 	Intps   []*int
@@ -107,8 +149,20 @@ var intpsVal = intpsType{
 	Int64ps: []*int64{i64p(25)},
 }
 
-var intpsValString = `Intps=18&Intps=19&Int8ps=20&Int16ps=21&Int16ps=22&Int32ps=23&Int32ps=24&Int64ps=25`
 var intpsValues = url.Values{"Intps": {"18", "19"}, "Int8ps": {"20"}, "Int16ps": {"21", "22"}, "Int32ps": {"23", "24"}, "Int64ps": {"25"}}
+
+const intpsValString = `Intps=18&Intps=19&Int8ps=20&Int16ps=21&Int16ps=22&Int32ps=23&Int32ps=24&Int64ps=25`
+const intpsValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="Intps"` + "\n\n" + `18
+--foobar` + "\n" + `Content-Disposition: form-data; name="Intps"` + "\n\n" + `19
+--foobar` + "\n" + `Content-Disposition: form-data; name="Intps8"` + "\n\n" + `20
+--foobar` + "\n" + `Content-Disposition: form-data; name="Intps16"` + "\n\n" + `21
+--foobar` + "\n" + `Content-Disposition: form-data; name="Intps16"` + "\n\n" + `22
+--foobar` + "\n" + `Content-Disposition: form-data; name="Intps32"` + "\n\n" + `23
+--foobar` + "\n" + `Content-Disposition: form-data; name="Intps32"` + "\n\n" + `24
+--foobar` + "\n" + `Content-Disposition: form-data; name="Intps64"` + "\n\n" + `25
+--foobar--
+`
 
 type uintType struct {
 	Uint   uint
@@ -126,8 +180,17 @@ var uintVal = uintType{
 	Uint64: 30,
 }
 
-var uintValString = `Uint=26&Uint8=27&Uint16=28&Uint32=29&Uint64=30`
 var uintValues = url.Values{"Uint": {"26"}, "Uint8": {"27"}, "Uint16": {"28"}, "Uint32": {"29"}, "Uint64": {"30"}}
+
+const uintValString = `Uint=26&Uint8=27&Uint16=28&Uint32=29&Uint64=30`
+const uintValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uint"` + "\n\n" + `26
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uint8"` + "\n\n" + `27
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uint16"` + "\n\n" + `28
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uint32"` + "\n\n" + `29
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uint64"` + "\n\n" + `30
+--foobar--
+`
 
 func uintp(u uint) *uint    { return &u }
 func u16p(u uint16) *uint16 { return &u }
@@ -151,8 +214,17 @@ var uintpVal = uintpType{
 	Uint64p: u64p(35),
 }
 
-var uintpValString = `Uintp=31&Uint8p=32&Uint16p=33&Uint32p=34&Uint64p=35`
 var uintpValues = url.Values{"Uintp": {"31"}, "Uint8p": {"32"}, "Uint16p": {"33"}, "Uint32p": {"34"}, "Uint64p": {"35"}}
+
+const uintpValString = `Uintp=31&Uint8p=32&Uint16p=33&Uint32p=34&Uint64p=35`
+const uintpValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uintp"` + "\n\n" + `31
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uintp8"` + "\n\n" + `32
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uintp16"` + "\n\n" + `33
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uintp32"` + "\n\n" + `34
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uintp64"` + "\n\n" + `35
+--foobar--
+`
 
 type uintsType struct {
 	Uints   []uint
@@ -170,8 +242,19 @@ var uintsVal = uintsType{
 	Uint64s: []uint64{41, 42},
 }
 
-var uintsValString = `Uints=36&Uint8s=37&Uint8s=38&Uint16s=39&Uint32s=40&Uint64s=41&Uint64s=42`
 var uintsValues = url.Values{"Uints": {"36"}, "Uint8s": {"37", "38"}, "Uint16s": {"39"}, "Uint32s": {"40"}, "Uint64s": {"41", "42"}}
+
+const uintsValString = `Uints=36&Uint8s=37&Uint8s=38&Uint16s=39&Uint32s=40&Uint64s=41&Uint64s=42`
+const uintsValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints"` + "\n\n" + `36
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints8"` + "\n\n" + `37
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints8"` + "\n\n" + `38
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints16"` + "\n\n" + `39
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints32"` + "\n\n" + `40
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints64"` + "\n\n" + `41
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints64"` + "\n\n" + `42
+--foobar--
+`
 
 type uintpsType struct {
 	Uintps   []*uint
@@ -189,8 +272,20 @@ var uintpsVal = uintpsType{
 	Uint64ps: []*uint64{u64p(50)},
 }
 
-var uintpsValString = `Uintps=43&Uintps=44&Uint8ps=45&Uint16ps=46&Uint16ps=47&Uint32ps=48&Uint32ps=49&Uint64ps=50`
 var uintpsValues = url.Values{"Uintps": {"43", "44"}, "Uint8ps": {"45"}, "Uint16ps": {"46", "47"}, "Uint32ps": {"48", "49"}, "Uint64ps": {"50"}}
+
+const uintpsValString = `Uintps=43&Uintps=44&Uint8ps=45&Uint16ps=46&Uint16ps=47&Uint32ps=48&Uint32ps=49&Uint64ps=50`
+const uintpsValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints"` + "\n\n" + `43
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints"` + "\n\n" + `44
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints8"` + "\n\n" + `45
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints16"` + "\n\n" + `46
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints16"` + "\n\n" + `47
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints32"` + "\n\n" + `48
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints32"` + "\n\n" + `49
+--foobar` + "\n" + `Content-Disposition: form-data; name="Uints64"` + "\n\n" + `50
+--foobar--
+`
 
 func strp(s string) *string { return &s }
 
@@ -208,8 +303,20 @@ var stringVal = stringType{
 	Stringps: []*string{strp("baz"), strp("bar"), strp("foo")},
 }
 
-var stringValString = `String=51&Stringp=foo&Strings=foo&Strings=bar&Strings=baz&Stringps=baz&Stringps=bar&Stringps=foo`
 var stringValues = url.Values{"String": {"51"}, "Stringp": {"foo"}, "Strings": {"foo", "bar", "baz"}, "Stringps": {"baz", "bar", "foo"}}
+
+const stringValString = `String=51&Stringp=foo&Strings=foo&Strings=bar&Strings=baz&Stringps=baz&Stringps=bar&Stringps=foo`
+const stringValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="String"` + "\n\n" + `51
+--foobar` + "\n" + `Content-Disposition: form-data; name="Stringp"` + "\n\n" + `foo
+--foobar` + "\n" + `Content-Disposition: form-data; name="Strings"` + "\n\n" + `foo
+--foobar` + "\n" + `Content-Disposition: form-data; name="Strings"` + "\n\n" + `bar
+--foobar` + "\n" + `Content-Disposition: form-data; name="Strings"` + "\n\n" + `baz
+--foobar` + "\n" + `Content-Disposition: form-data; name="Stringps"` + "\n\n" + `baz
+--foobar` + "\n" + `Content-Disposition: form-data; name="Stringps"` + "\n\n" + `bar
+--foobar` + "\n" + `Content-Disposition: form-data; name="Stringps"` + "\n\n" + `foo
+--foobar--
+`
 
 func f32p(f float32) *float32 { return &f }
 func f64p(f float64) *float64 { return &f }
@@ -228,8 +335,16 @@ var floatVal = floatType{
 	Float64p: f64p(52.0),
 }
 
-var floatValString = `Float32=52.00001&Float32p=52.1234&Float64=52.64&Float64p=52`
 var floatValues = url.Values{"Float32": {"52.00001"}, "Float32p": {"52.1234"}, "Float64": {"52.64"}, "Float64p": {"52"}}
+
+const floatValString = `Float32=52.00001&Float32p=52.1234&Float64=52.64&Float64p=52`
+const floatValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="Float32"` + "\n\n" + `52.00001
+--foobar` + "\n" + `Content-Disposition: form-data; name="Float32p"` + "\n\n" + `52.1234
+--foobar` + "\n" + `Content-Disposition: form-data; name="Float64"` + "\n\n" + `52.64
+--foobar` + "\n" + `Content-Disposition: form-data; name="Float64p"` + "\n\n" + `52
+--foobar--
+`
 
 type floatsType struct {
 	Float32s  []float32
@@ -245,8 +360,19 @@ var floatsVal = floatsType{
 	Float64ps: []*float64{f64p(53.0005), f64p(53.6)},
 }
 
-var floatsValString = `Float32s=53.01&Float32ps=53.1&Float32ps=53.2&Float64s=53.03&Float64s=53.04&Float64ps=53.0005&Float64ps=53.6`
 var floatsValues = url.Values{"Float32s": {"53.01"}, "Float32ps": {"53.1", "53.2"}, "Float64s": {"53.03", "53.04"}, "Float64ps": {"53.0005", "53.6"}}
+
+const floatsValString = `Float32s=53.01&Float32ps=53.1&Float32ps=53.2&Float64s=53.03&Float64s=53.04&Float64ps=53.0005&Float64ps=53.6`
+const floatsValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="Float32s"` + "\n\n" + `53.01
+--foobar` + "\n" + `Content-Disposition: form-data; name="Float32ps"` + "\n\n" + `53.1
+--foobar` + "\n" + `Content-Disposition: form-data; name="Float32ps"` + "\n\n" + `53.2
+--foobar` + "\n" + `Content-Disposition: form-data; name="Float64s"` + "\n\n" + `53.03
+--foobar` + "\n" + `Content-Disposition: form-data; name="Float64s"` + "\n\n" + `52.04
+--foobar` + "\n" + `Content-Disposition: form-data; name="Float64ps"` + "\n\n" + `53.0005
+--foobar` + "\n" + `Content-Disposition: form-data; name="Float64ps"` + "\n\n" + `53.6
+--foobar--
+`
 
 type embed0 struct {
 	Field string
@@ -270,8 +396,15 @@ var embedVal = embed0{
 	Field: "string",
 }
 
-var embedValString = `Field=string&Field=3467&Field=34.67`
 var embedValues = url.Values{"Field": {"string", "3467", "34.67"}}
+
+const embedValString = `Field=string&Field=3467&Field=34.67`
+const embedValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="Field"` + "\n\n" + `string
+--foobar` + "\n" + `Content-Disposition: form-data; name="Field"` + "\n\n" + `3467
+--foobar` + "\n" + `Content-Disposition: form-data; name="Field"` + "\n\n" + `34.67
+--foobar--
+`
 
 type marshalSlice []string
 
@@ -297,8 +430,16 @@ var marshalVal = marshalType{
 	N: marshalSlice{"foo", "bar", "baz"},
 }
 
-var marshalValString = `M=foo%2Cbar%2Cbaz&N=foo&N=bar&N=baz`
 var marshalValues = url.Values{"M": {"foo", "bar", "baz"}, "N": {"foo", "bar", "baz"}}
+
+const marshalValString = `M=foo%2Cbar%2Cbaz&N=foo&N=bar&N=baz`
+const marshalValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="M"` + "\n\n" + `foo,bar,baz
+--foobar` + "\n" + `Content-Disposition: form-data; name="N"` + "\n\n" + `foo
+--foobar` + "\n" + `Content-Disposition: form-data; name="N"` + "\n\n" + `bar
+--foobar` + "\n" + `Content-Disposition: form-data; name="N"` + "\n\n" + `baz
+--foobar--
+`
 
 func ifacep(i interface{}) *interface{} { return &i }
 
@@ -316,8 +457,17 @@ var ifaceVal = ifaceType{
 	ISlice:  []interface{}{"abc", float32(32.1234567)},
 }
 
-var ifaceValString = `IString=foo&IInt=32&IBool=true&ISlice=abc&ISlice=32.123455`
 var ifaceValues = url.Values{"IString": {"foo"}, "IInt": {"32"}, "IBool": {"true"}, "ISlice": {"abc", "32.123455"}}
+
+const ifaceValString = `IString=foo&IInt=32&IBool=true&ISlice=abc&ISlice=32.123455`
+const ifaceValStringMultipart = `
+--foobar` + "\n" + `Content-Disposition: form-data; name="IString"` + "\n\n" + `foo
+--foobar` + "\n" + `Content-Disposition: form-data; name="IInt"` + "\n\n" + `32
+--foobar` + "\n" + `Content-Disposition: form-data; name="IBool"` + "\n\n" + `true
+--foobar` + "\n" + `Content-Disposition: form-data; name="ISlice"` + "\n\n" + `abc
+--foobar` + "\n" + `Content-Disposition: form-data; name="ISlice"` + "\n\n" + `32.123455
+--foobar--
+`
 
 func TestMarshal(t *testing.T) {
 	tests := []struct {
