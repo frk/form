@@ -128,6 +128,11 @@ func NewDecoderMultipart(r io.Reader, contentType string) *Decoder {
 	return &Decoder{src: src, done: make(map[string]bool)}
 }
 
+func (d *Decoder) WithTagKey(tagKey string) *Decoder {
+	d.tagKey = tagKey
+	return d
+}
+
 // Decode reads the URL-encoded data from its input and stores it in the
 // value pointed to by v. The v argument must point to a struct value
 // otherwhise an ArgumentError will be returned.
@@ -366,7 +371,16 @@ func NewEncoder(w io.Writer) *Encoder {
 	return &Encoder{w: w, tagKey: DefaultTagKey}
 }
 
+func (e *Encoder) WithTagKey(tagKey string) *Encoder {
+	e.tagKey = tagKey
+	return e
+}
+
 func (e *Encoder) Encode(v interface{}) error {
+	if e.tagKey == "" {
+		e.tagKey = DefaultTagKey
+	}
+
 	rv := reflect.ValueOf(v)
 	for rv.Kind() == reflect.Ptr || rv.Kind() == reflect.Interface {
 		rv = rv.Elem()
